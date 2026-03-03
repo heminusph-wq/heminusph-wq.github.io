@@ -120,7 +120,6 @@
             animation: textGradient 6s ease infinite;
             transition: transform 0.4s ease;
             cursor: default;
-            user-select: none;
         }
 
         .greeting.entrance {
@@ -386,7 +385,7 @@
                 particles.push(new Particle());
             }
 
-            /* Draw connections between nearby particles */
+            /* Draw connections between nearby particles — O(n²) but fine for capped count of 60 */
             function drawConnections() {
                 for (let i = 0; i < particles.length; i++) {
                     for (let j = i + 1; j < particles.length; j++) {
