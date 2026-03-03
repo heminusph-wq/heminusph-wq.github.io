@@ -117,13 +117,18 @@
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
-            animation: textGradient 6s ease infinite, fadeInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+            animation: textGradient 6s ease infinite;
+            transition: transform 0.4s ease;
             cursor: default;
             user-select: none;
         }
 
+        .greeting.entrance {
+            animation: textGradient 6s ease infinite, fadeInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
         .greeting:hover {
-            animation: textGradient 2s ease infinite, scaleUp 0.4s ease forwards;
+            transform: scale(1.05);
         }
 
         @keyframes textGradient {
@@ -140,10 +145,6 @@
                 opacity: 1;
                 transform: translateY(0) scale(1);
             }
-        }
-
-        @keyframes scaleUp {
-            to { transform: scale(1.05); }
         }
 
         /* Subtitle */
@@ -168,8 +169,8 @@
         }
 
         @keyframes lineGlow {
-            0%, 100% { box-shadow: 0 0 10px rgba(167, 139, 250, 0.3); width: 80px; }
-            50% { box-shadow: 0 0 25px rgba(244, 114, 182, 0.5); width: 120px; }
+            0%, 100% { box-shadow: 0 0 10px rgba(167, 139, 250, 0.3); transform: scaleX(1); }
+            50% { box-shadow: 0 0 25px rgba(244, 114, 182, 0.5); transform: scaleX(1.5); }
         }
 
         /* Tagline */
@@ -257,6 +258,15 @@
             0%, 100% { opacity: var(--min-opacity); transform: scale(1); }
             50% { opacity: var(--max-opacity); transform: scale(1.5); }
         }
+
+        /* Accessibility: reduce motion for users who prefer it */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -273,7 +283,7 @@
     <div class="glow" id="glow"></div>
 
     <main class="content">
-        <h1 class="greeting">Hello, World!</h1>
+        <h1 class="greeting entrance">Hello, World!</h1>
         <p class="subtitle">Welcome to my corner of the internet</p>
         <div class="line"></div>
         <p class="tagline">Every great journey begins with a single line of code.</p>
@@ -282,12 +292,22 @@
     <span class="corner-tag">click anywhere</span>
 
     <script>
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        /* --- Remove entrance class after animation completes --- */
+        const greeting = document.querySelector('.greeting');
+        greeting.addEventListener('animationend', function (e) {
+            if (e.animationName === 'fadeInUp') {
+                greeting.classList.remove('entrance');
+            }
+        });
+
         /* --- Star field --- */
         (function initStars() {
-            var container = document.getElementById('stars');
-            var count = Math.min(80, Math.floor(window.innerWidth * window.innerHeight / 12000));
-            for (var i = 0; i < count; i++) {
-                var star = document.createElement('div');
+            const container = document.getElementById('stars');
+            const count = Math.min(80, Math.floor(window.innerWidth * window.innerHeight / 12000));
+            for (let i = 0; i < count; i++) {
+                const star = document.createElement('div');
                 star.className = 'star';
                 star.style.left = Math.random() * 100 + '%';
                 star.style.top = Math.random() * 100 + '%';
@@ -301,10 +321,10 @@
 
         /* --- Particle canvas --- */
         (function initParticles() {
-            var canvas = document.getElementById('particles');
-            var ctx = canvas.getContext('2d');
-            var particles = [];
-            var mouse = { x: -1000, y: -1000 };
+            const canvas = document.getElementById('particles');
+            const ctx = canvas.getContext('2d');
+            const particles = [];
+            const mouse = { x: -1000, y: -1000 };
 
             function resize() {
                 canvas.width = window.innerWidth;
@@ -324,7 +344,7 @@
                 this.vy = (Math.random() - 0.5) * 0.4;
                 this.radius = 1 + Math.random() * 1.5;
                 this.opacity = 0.2 + Math.random() * 0.3;
-                var colors = ['167,139,250', '244,114,182', '251,146,60', '52,211,153'];
+                const colors = ['167,139,250', '244,114,182', '251,146,60', '52,211,153'];
                 this.color = colors[Math.floor(Math.random() * colors.length)];
             };
 
@@ -333,11 +353,11 @@
                 this.y += this.vy;
 
                 /* Gentle mouse attraction */
-                var dx = mouse.x - this.x;
-                var dy = mouse.y - this.y;
-                var dist = Math.sqrt(dx * dx + dy * dy);
+                const dx = mouse.x - this.x;
+                const dy = mouse.y - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
                 if (dist < 200 && dist > 0) {
-                    var force = (200 - dist) / 200 * 0.015;
+                    const force = (200 - dist) / 200 * 0.015;
                     this.vx += dx / dist * force;
                     this.vy += dy / dist * force;
                 }
@@ -361,20 +381,20 @@
             };
 
             /* Initialize particles */
-            var particleCount = Math.min(60, Math.floor(window.innerWidth * window.innerHeight / 20000));
-            for (var i = 0; i < particleCount; i++) {
+            const particleCount = Math.min(60, Math.floor(window.innerWidth * window.innerHeight / 20000));
+            for (let i = 0; i < particleCount; i++) {
                 particles.push(new Particle());
             }
 
             /* Draw connections between nearby particles */
             function drawConnections() {
-                for (var i = 0; i < particles.length; i++) {
-                    for (var j = i + 1; j < particles.length; j++) {
-                        var dx = particles[i].x - particles[j].x;
-                        var dy = particles[i].y - particles[j].y;
-                        var dist = Math.sqrt(dx * dx + dy * dy);
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
                         if (dist < 150) {
-                            var alpha = (1 - dist / 150) * 0.12;
+                            const alpha = (1 - dist / 150) * 0.12;
                             ctx.beginPath();
                             ctx.moveTo(particles[i].x, particles[i].y);
                             ctx.lineTo(particles[j].x, particles[j].y);
@@ -388,28 +408,39 @@
 
             function animate() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                for (var i = 0; i < particles.length; i++) {
+                for (let i = 0; i < particles.length; i++) {
                     particles[i].update();
                     particles[i].draw();
                 }
                 drawConnections();
                 requestAnimationFrame(animate);
             }
-            animate();
 
-            /* Track mouse for particle interaction and glow */
-            var glow = document.getElementById('glow');
+            /* Only run particle animation loop if user hasn't requested reduced motion */
+            if (!prefersReducedMotion) {
+                animate();
+            }
+
+            /* Track mouse/touch for particle interaction and glow */
+            const glow = document.getElementById('glow');
+            function onPointerMove(x, y) {
+                mouse.x = x;
+                mouse.y = y;
+                glow.style.left = x + 'px';
+                glow.style.top = y + 'px';
+            }
             document.addEventListener('mousemove', function (e) {
-                mouse.x = e.clientX;
-                mouse.y = e.clientY;
-                glow.style.left = e.clientX + 'px';
-                glow.style.top = e.clientY + 'px';
+                onPointerMove(e.clientX, e.clientY);
             });
+            document.addEventListener('touchmove', function (e) {
+                const touch = e.touches[0];
+                onPointerMove(touch.clientX, touch.clientY);
+            }, { passive: true });
         })();
 
         /* --- Click ripple effect --- */
         document.addEventListener('click', function (e) {
-            var ripple = document.createElement('div');
+            const ripple = document.createElement('div');
             ripple.className = 'ripple';
             ripple.style.left = (e.clientX - 200) + 'px';
             ripple.style.top = (e.clientY - 200) + 'px';
